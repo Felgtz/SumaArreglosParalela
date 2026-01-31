@@ -7,34 +7,40 @@ using namespace std;
 
 int main() {
     const int N = 1000;
-    int A[N], B[N], C[N];
+    int A[N], B[N], C[N], thread_id[N];
 
-    // Números aleatorios
     srand((unsigned)time(NULL));
 
-    // Arreglos A y B
+    // Initialize arrays
     for (int i = 0; i < N; i++) {
         A[i] = rand() % 100;
         B[i] = rand() % 100;
     }
 
-    // Suma de arreglos en paralelo
-    #pragma omp parallel for
+    omp_set_num_threads(4);
+    // Parallel sum
+    #pragma omp parallel for schedule(static,1)
     for (int i = 0; i < N; i++) {
+        thread_id[i] = omp_get_thread_num();
         C[i] = A[i] + B[i];
     }
 
-    // Mostrar algunos resultados para comprobar
-    cout << "Indice\tA\tB\tC (A+B)" << endl;
+    // Print only first 10 results (outside parallel region)
+    cout << "Index\tThread\tA\tB\tC\n";
     for (int i = 0; i < 20; i++) {
-        cout << i << "\t" << A[i] << "\t" << B[i] << "\t" << C[i] << endl;
+        cout << i << "\t"
+             << thread_id[i] << "\t"
+             << A[i] << "\t"
+             << B[i] << "\t"
+             << C[i] << endl;
+    }
+
+    #pragma omp parallel
+    {
+    #pragma omp single
+    cout << "OpenMP threads in use: "
+         << omp_get_num_threads() << endl;
     }
 
     return 0;
 }
-
- // Esta linea se usa para activar openOMP y crear el archivo que se ejecuta en terminal
- // g++ -Xpreprocessor -fopenmp -I$(brew --prefix libomp)/include -L$(brew --prefix libomp)/lib -lomp main.cpp -o Suma
-
- // Con esto se ejecuta el programa en OMP ./Suma
-
